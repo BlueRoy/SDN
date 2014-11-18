@@ -1,0 +1,24 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1416279646342
+Build-Jdk: 1.8.0_20
+Built-By: Roy
+Bundle-Activator: com.roy.work.flowcontrol.Activator
+Bundle-ManifestVersion: 2
+Bundle-Name: flowcontrol
+Bundle-SymbolicName: com.roy.work.flowcontrol
+Bundle-Version: 0.1.0.SNAPSHOT
+Created-By: Apache Maven Bundle Plugin
+Export-Package: com.roy.work.flowcontrol;uses:="org.apache.felix.dm,org.
+ opendaylight.controller.sal.core,org.opendaylight.controller.sal.packet
+ ";version="0.1.0"
+Import-Package: org.apache.felix.dm;version="[3.0,4)",org.opendaylight.c
+ ontroller.hosttracker;version="[0.5,1)",org.opendaylight.controller.hos
+ ttracker.hostAware;version="[0.5,1)",org.opendaylight.controller.sal.ac
+ tion;version="[0.8,1)",org.opendaylight.controller.sal.core;version="[0
+ .8,1)",org.opendaylight.controller.sal.flowprogrammer;version="[0.8,1)"
+ ,org.opendaylight.controller.sal.match;version="[0.8,1)",org.opendaylig
+ ht.controller.sal.packet;version="[0.8,1)",org.opendaylight.controller.
+ sal.routing;version="[0.8,1)",org.opendaylight.controller.sal.utils;ver
+ sion="[0.8,1)",org.slf4j;version="[1.7,2)"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.5))"
+Tool: Bnd-2.3.0.201405100607

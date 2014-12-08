@@ -25,6 +25,7 @@ import org.opendaylight.controller.sal.packet.Ethernet;
 import org.opendaylight.controller.sal.packet.IDataPacketService;
 import org.opendaylight.controller.sal.packet.IListenDataPacket;
 import org.opendaylight.controller.sal.packet.IPv4;
+import org.opendaylight.controller.sal.packet.ICMP;
 import org.opendaylight.controller.sal.packet.Packet;
 import org.opendaylight.controller.sal.packet.PacketResult;
 import org.opendaylight.controller.sal.packet.RawPacket;
@@ -146,19 +147,18 @@ public class PacketHandler implements IListenDataPacket {
 
 	@Override
 	public PacketResult receiveDataPacket(RawPacket inPkt){
-		TimeStamp timestamp = inPkt.getIncomingTime();
-		log.trace(timestamp.getStringValue());
+		TimeStamp timestamp = inPkt.getIncomingTime();	
+		
 		// The connector, the packet came from ("port")
 		NodeConnector ingressConnector = inPkt.getIncomingNodeConnector();
 		// The node that received the packet ("switch")
 		Node node = ingressConnector.getNode();
 
-		//log.trace("Packet from " + node.getNodeIDString() + " " + ingressConnector.getNodeConnectorIDString());
-
 		// Use DataPacketService to decode the packet.
 		Packet pkt = dataPacketService.decodeDataPacket(inPkt);
 
 		if (pkt instanceof Ethernet) {
+			
 			Ethernet ethFrame = (Ethernet) pkt;
 			Object l3Pkt = ethFrame.getPayload();
 
@@ -166,6 +166,7 @@ public class PacketHandler implements IListenDataPacket {
 				IPv4 ipv4Pkt = (IPv4) l3Pkt;
 				InetAddress clientAddr = intToInetAddress(ipv4Pkt.getSourceAddress());
 				InetAddress dstAddr = intToInetAddress(ipv4Pkt.getDestinationAddress());
+				Object l4Datagram = ipv4Pkt.getPayload();
 				
 				// The connector, source and destination ("port")
 				HostNodeConnector startHostConnector = iptohost.hostFind(clientAddr);
@@ -179,6 +180,10 @@ public class PacketHandler implements IListenDataPacket {
 				log.trace("Packet from " + startNode.getNodeIDString() + " " + startConnector.getNodeConnectorIDString());
 				log.trace("Packet to " + endNode.getNodeIDString() + " " + endConnector.getNodeConnectorIDString());
 				
+				if(l4Datagram instanceof ICMP){
+					ICMP icmpPkt = (ICMP) l4Datagram;
+					log.trace(timestamp.getStringValue());
+									
 				//two hosts on the same node
 				if (startNode.getNodeIDString().equals(endNode.getNodeIDString())){
 					Match match = new Match();
@@ -197,7 +202,7 @@ public class PacketHandler implements IListenDataPacket {
 						log.error("Could not program flow: " + status.getDescription());
 						return PacketResult.CONSUME;
 					}
-					log.info("Installed flow {} in node {}", flow, startConnector);
+					//log.info("{}",flow);
 
 					match = new Match();
 					match.setField(MatchType.DL_TYPE, (short) 0x0800); // IPv4
@@ -214,8 +219,7 @@ public class PacketHandler implements IListenDataPacket {
 					if (!status.isSuccess()) {
 						log.error("Could not program flow: " + status.getDescription());
 						return PacketResult.CONSUME;
-					}
-					log.info("Installed flow {} in node {}", flow, endConnector);					
+					}					
 				}
 				
 				//two hosts on the different nodes
@@ -247,7 +251,7 @@ public class PacketHandler implements IListenDataPacket {
 							log.error("Could not program flow: " + status.getDescription());
 							return PacketResult.CONSUME;
 						}
-						log.info("Installed flow {} in node {}", flow, startConnector);
+						//log.info("{}",flow);
 
 						// Create flow table entry for response packets
 						match = new Match();
@@ -266,7 +270,6 @@ public class PacketHandler implements IListenDataPacket {
 							log.error("Could not program flow: " + status.getDescription());
 							return PacketResult.CONSUME;
 						}
-						log.info("Installed flow {} in node {}", flow, firstConnector);
 					}
 					else{
 						NodeConnector headConnector = edges.get(i).getTailNodeConnector();
@@ -289,7 +292,7 @@ public class PacketHandler implements IListenDataPacket {
 							log.error("Could not program flow: " + status.getDescription());
 							return PacketResult.CONSUME;
 						}
-						log.info("Installed flow {} in node {}", flow, tailConnector);
+						//log.info("{}",flow);
 
 						// Create flow table entry for response packets
 						match = new Match();
@@ -310,8 +313,7 @@ public class PacketHandler implements IListenDataPacket {
 						if (!status.isSuccess()) {
 							log.error("Could not program flow: " + status.getDescription());
 							return PacketResult.CONSUME;
-						}
-						log.info("Installed flow {} in node {}", flow, headConnector);									
+						}						
 					    
 						//last edge
 						if(i == (edges.size()-1)){
@@ -333,7 +335,7 @@ public class PacketHandler implements IListenDataPacket {
 							log.error("Could not program flow: " + status.getDescription());
 							return PacketResult.CONSUME;
 						}
-						log.info("Installed flow {} in node {}", flow, lastConnector);
+						//log.info("{}",flow);
 
 						match = new Match();
 						match.setField(MatchType.DL_TYPE, (short) 0x0800); // IPv4
@@ -351,17 +353,16 @@ public class PacketHandler implements IListenDataPacket {
 							log.error("Could not program flow: " + status.getDescription());
 							return PacketResult.CONSUME;
 						}
-						log.info("Installed flow {} in node {}", flow, endConnector);
 						}
 					}
 				}
 				}
+				}
 				
-				// Forward initial packet to selected server
-				log.trace("Forwarding packet to " + dstAddr.toString() + " through port " + endConnector.getNodeConnectorIDString());	
-				//ipv4Pkt.setDestinationAddress(dstAddr);			
+				// Forward initial packet to selected server				
 				inPkt.setOutgoingNodeConnector(endConnector);
 				dataPacketService.transmitDataPacket(inPkt);
+				log.trace("Forwarding packet to " + dstAddr.toString() + " through port " + endConnector.getNodeConnectorIDString());			
 				return PacketResult.CONSUME;
 			}
 		}

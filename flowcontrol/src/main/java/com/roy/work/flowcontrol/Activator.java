@@ -9,7 +9,6 @@ import org.opendaylight.controller.sal.flowprogrammer.IFlowProgrammerService;
 import org.opendaylight.controller.sal.packet.IDataPacketService;
 import org.opendaylight.controller.sal.packet.IListenDataPacket;
 import org.opendaylight.controller.sal.routing.IRouting;
-import org.opendaylight.controller.switchmanager.ISwitchManager;
 import org.opendaylight.controller.hosttracker.IfIptoHost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,12 +47,6 @@ public class Activator extends ComponentActivatorAbstractBase {
                     "setFlowProgrammerService", "unsetFlowProgrammerService")
                     .setRequired(true));
             
-           /* // Need SwitchManager service for enumerating ports of switch
-            c.add(createContainerServiceDependency(containerName).setService(
-                    ISwitchManager.class).setCallbacks(
-                    "setSwitchManagerService", "unsetSwitchManagerService")
-                    .setRequired(true));    
-            */
             // Need HostTracker service for determining the hosts
             c.add(createContainerServiceDependency(containerName).setService(
                     IfIptoHost.class).setCallbacks(
